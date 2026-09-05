@@ -1,0 +1,36 @@
+{
+  "_meta": {
+    "schema_version": 1,
+    "purpose": "Contact fixture for the deep-agent advisor's policy-checker subagent.",
+    "WARNING": "ALL NUMBERS BELOW ARE FICTIONAL PLACEHOLDERS drawn from ranges reserved for drama/testing (Ofcom 020 7946 0xxx, NANP 555-01xx, and patterned SG numbers). They do NOT reach any airline. Replace with verified published numbers before any real use. The advisor must always surface the verify flag alongside a number.",
+    "source": "fixture_2026_09",
+    "verify_all": true
+  },
+  "SQ": {
+    "name": "Singapore Airlines",
+    "disruption_desk": "+65 6555 0100",
+    "regional": {
+      "SG": "+65 6555 0100",
+      "UK": "+44 20 7946 0101",
+      "US": "+1 555 0102"
+    },
+    "in_airport": "SQ transfer / service desk — handles hotel and meal vouchers directly; faster than the phone line during mass disruption",
+    "claim_url": "https://www.singaporeair.com/  (navigate to feedback / claims)",
+    "source": "fixture_2026_09",
+    "verify": true
+  },
+  "BA": {
+    "name": "British Airways",
+    "disruption_desk": "+44 20 7946 0110",
+    "regional": {
+      "UK": "+44 20 7946 0110",
+      "US": "+1 555 0111",
+      "SG": "+65 6555 0112"
+    },
+    "in_airport": "BA customer service desk in the departures hall",
+    "claim_url": "https://www.britishairways.com/  (navigate to delay / cancellation claim form)",
+    "notes": "EC 261 compensation and receipted expense claims are filed online, not by phone",
+    "source": "fixture_2026_09",
+    "verify": true
+  }
+}

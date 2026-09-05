@@ -1,0 +1,90 @@
+{
+  "_meta": {
+    "description": "Local flight fixtures. `status` backs get_flight_status; `search` backs search_replacement_flights. FAIL_MODE injects provider failures against these so the uncertainty path can be demoed offline.",
+    "fail_modes": ["none", "http_500", "timeout", "stale"],
+    "schema_version": 1
+  },
+  "status": [
+    {
+      "flight_iata": "SQ123",
+      "date": "2026-09-15",
+      "origin_iata": "BOM",
+      "destination_iata": "SIN",
+      "scheduled_departure": "2026-09-15T08:30:00+05:30",
+      "scheduled_arrival": "2026-09-15T16:15:00+08:00",
+      "status": "cancelled",
+      "delay_minutes": 0,
+      "reason": "aircraft_maintenance"
+    },
+    {
+      "flight_iata": "SQ425",
+      "date": "2026-09-15",
+      "origin_iata": "BOM",
+      "destination_iata": "SIN",
+      "scheduled_departure": "2026-09-15T16:30:00+05:30",
+      "scheduled_arrival": "2026-09-15T23:15:00+08:00",
+      "status": "on_time",
+      "delay_minutes": 0
+    },
+    {
+      "flight_iata": "AI2380",
+      "date": "2026-09-16",
+      "origin_iata": "BOM",
+      "destination_iata": "SIN",
+      "scheduled_departure": "2026-09-16T07:45:00+05:30",
+      "scheduled_arrival": "2026-09-16T15:30:00+08:00",
+      "status": "on_time",
+      "delay_minutes": 0
+    }
+  ],
+  "search": [
+    {
+      "carrier": "SQ",
+      "flight_number": "SQ425",
+      "origin_iata": "BOM",
+      "destination_iata": "SIN",
+      "departure": "2026-09-15T16:30:00+05:30",
+      "arrival": "2026-09-15T23:15:00+08:00",
+      "stops": 0,
+      "price_amount": 120.0,
+      "price_currency": "USD",
+      "seats_remaining": 6
+    },
+    {
+      "carrier": "TG",
+      "flight_number": "TG338",
+      "origin_iata": "BOM",
+      "destination_iata": "SIN",
+      "departure": "2026-09-15T13:45:00+05:30",
+      "arrival": "2026-09-16T01:40:00+08:00",
+      "stops": 1,
+      "price_amount": 95.0,
+      "price_currency": "USD",
+      "seats_remaining": 9
+    },
+    {
+      "carrier": "AI",
+      "flight_number": "AI2380",
+      "origin_iata": "BOM",
+      "destination_iata": "SIN",
+      "departure": "2026-09-16T07:45:00+05:30",
+      "arrival": "2026-09-16T15:30:00+08:00",
+      "stops": 0,
+      "price_amount": 70.0,
+      "price_currency": "USD",
+      "seats_remaining": 4
+    },
+    {
+      "carrier": "SQ",
+      "flight_number": "SQ421",
+      "origin_iata": "BOM",
+      "destination_iata": "SIN",
+      "departure": "2026-09-16T09:20:00+05:30",
+      "arrival": "2026-09-16T17:05:00+08:00",
+      "stops": 0,
+      "price_amount": 85.0,
+      "price_currency": "USD",
+      "seats_remaining": 2
+    }
+  ]
+}

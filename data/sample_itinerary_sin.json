@@ -1,0 +1,68 @@
+{
+  "trip_id": "trip_bom_sin_2026_09",
+  "traveller_first_name": "Alex",
+  "party_size": 4,
+  "bookings": [
+    {
+      "booking_id": "bk_flight_sq123",
+      "type": "flight",
+      "title": "BOM → SIN on SQ123",
+      "start": "2026-09-15T08:30:00+05:30",
+      "end": "2026-09-15T16:15:00+08:00",
+      "location_iata": "BOM",
+      "legs": [
+        {
+          "carrier": "SQ",
+          "flight_number": "SQ123",
+          "origin_iata": "BOM",
+          "destination_iata": "SIN",
+          "scheduled_departure": "2026-09-15T08:30:00+05:30",
+          "scheduled_arrival": "2026-09-15T16:15:00+08:00",
+          "cabin": "economy",
+          "booking_reference": "REDACTED"
+        }
+      ]
+    },
+    {
+      "booking_id": "bk_transfer_sin_hotel",
+      "type": "transfer",
+      "title": "SIN Changi → Marina Bay hotel private transfer",
+      "start": "2026-09-15T17:00:00+08:00",
+      "end": "2026-09-15T17:45:00+08:00",
+      "location_iata": "SIN",
+      "metadata": {
+        "provider": "ChangiRide",
+        "free_change_until": "2026-09-15T13:00:00+08:00",
+        "requires_provider_confirmation": true
+      }
+    },
+    {
+      "booking_id": "bk_hotel_marina",
+      "type": "hotel",
+      "title": "Marina Bay Gardens Hotel — 3 nights",
+      "start": "2026-09-15T18:00:00+08:00",
+      "end": "2026-09-18T11:00:00+08:00",
+      "location_name": "Marina Bay, Singapore",
+      "metadata": {
+        "check_in_cutoff_hour": 23,
+        "late_arrival_message_supported": true,
+        "free_cancellation_until": "2026-09-14T23:59:00+08:00"
+      },
+      "location_iata": "SIN"
+    },
+    {
+      "booking_id": "bk_activity_night_safari",
+      "type": "activity",
+      "title": "Night Safari — 4 adult tickets",
+      "start": "2026-09-15T19:30:00+08:00",
+      "end": "2026-09-15T22:30:00+08:00",
+      "location_name": "Mandai, Singapore",
+      "cancellable": false,
+      "metadata": {
+        "reschedule_window_days": 3,
+        "reschedule_requires_provider_confirmation": false
+      },
+      "location_iata": "SIN"
+    }
+  ]
+}

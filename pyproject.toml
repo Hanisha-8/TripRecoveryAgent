@@ -1,0 +1,28 @@
+[project]
+name = "triprecovery"
+version = "0.1.0"
+description = "Deep-agent trip disruption recovery — investigate with a model, commit with deterministic controls"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    # Deep agent core
+    "deepagents>=0.7.13",
+    "langgraph>=1.2,<2.0",
+    "langgraph-checkpoint-sqlite>=3.1.0",
+    "langchain>=1.3,<2.0",
+    "langchain-core>=1.0,<2.0",
+    "langchain-openai>=1.3.0",
+    # Data
+    "pydantic>=2.7.0",
+    "python-dotenv>=1.2.2",
+    # UI (R5)
+    "streamlit>=1.38.0",
+    "reportlab>=4.0",   # booking-confirmation PDF for the demo
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["core", "recovery", "eval"]
