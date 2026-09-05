@@ -14,6 +14,11 @@ human actions until the itinerary is valid again.
 
 ## Architecture
 
+The flow is split at approval, because the two halves have opposite requirements.
+Investigation is open-ended search and needs a model choosing its own next step.
+Commitment must be replayable and must never depend on prompt discipline.
+<img width="2200" height="2740" alt="triprecovery-deep-agent-hld" src="https://github.com/user-attachments/assets/c370cc4b-2ebc-4fbe-8219-f4435c736fc7" />
+
 TripRecovery follows one product path: a hierarchical deep agent investigates
 and recommends; deterministic controls verify, authorize, execute and revalidate.
 The split exists because investigation requires judgement while commitment must
