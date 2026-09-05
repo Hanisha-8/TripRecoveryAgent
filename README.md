@@ -14,25 +14,92 @@ human actions until the itinerary is valid again.
 
 ## Architecture
 
-The flow is split at approval, because the two halves have opposite requirements.
-Investigation is open-ended search and needs a model choosing its own next step.
-Commitment must be replayable and must never depend on prompt discipline.
+TripRecovery follows one product path: a hierarchical deep agent investigates
+and recommends; deterministic controls verify, authorize, execute and revalidate.
+The split exists because investigation requires judgement while commitment must
+be replayable and must never depend on prompt discipline.
 
+
+
+
+```mermaid
+flowchart TB
+    U["Traveller intent + itinerary"] --> V["Verify disruption and snapshot itinerary"]
+
+    V -->|Insufficient evidence| E["Escalate or request evidence"]
+    V -->|Verified| O
+
+    subgraph DA["Deep-agent investigation — LLM"]
+        O["Tier 1: recovery orchestrator"]
+        P["Policy checker: entitlements and evidence"]
+        I["Impact analyst: dependency impact"]
+        F["Options finder: recovery alternatives"]
+        C["Critic: grounding and feasibility"]
+        W["Recovery case workspace"]
+        D["Structured PlanDraft: exactly two ranked options"]
+
+        O --> P
+        O --> I
+        P --> W
+        I --> W
+        W --> F
+        F --> W
+        W --> C
+        C --> O
+        O --> D
+    end
+
+    D --> G["Deterministic compiler: canonicalize, validate and classify"]
+    G -->|Violations| O
+    G -->|Accepted| R["Decision card: recommended A and alternative B"]
+
+    R --> H{"Human decision"}
+    H -->|Modify| O
+    H -->|Handle myself| M["Action checklist"]
+    H -->|Approve exact plan version| X["Capability-gated executor"]
+
+    X --> Y["Apply approved safe actions and open handoffs"]
+    Y --> L["Durable action ledger and recovery state"]
+    L --> Q["Revalidate the whole itinerary"]
+    Q -->|Work remains| T["Track the next human action"]
+    T --> L
+    Q -->|Valid and settled| Z["Trip valid again"]
 ```
-        DEEP AGENT — investigate                DETERMINISTIC SHELL — commit
- ┌───────────────────────────────────┐   ┌──────────────────────────────────────┐
- │ orchestrator (own tool:           │   │ plan_compiler → accept or reject     │
- │   get_flight_status)              │   │ approve()     → ApprovalRecord       │
- │   ├── policy-checker              │   │ authorize()   → Authorization │ Refusal│
- │   ├── impact-analyst              │──▶│ execute()     → agent_safe only      │
- │   ├── options-finder              │   │ ledger/handoffs → persist            │
- │   ├── critic                      │   │ revalidate()  → close the case       │
- │   └── general-purpose  [DISABLED] │   │                                      │
- │ output: PlanDraft (2 options)     │   │ output: RecoveryPlan, ValidationResult│
- └───────────────────────────────────┘   └──────────────────────────────────────┘
-   files: workspace/{analysis,drafts}/        no LLM, no prompts, pure functions
-   corpus: policies/ + grounding/             store: SQLite (5 tables)
-```
+
+The diagram shows the target high-level design. The current orchestrator uses a
+bounded specialist sequence and may re-delegate after a block, critic finding or
+compiler rejection. Evolving that sequence into case-state-driven selection of
+the next relevant check is an explicit next step, not something hidden behind the
+diagram.
+
+### Decision ownership
+
+| LLM owns | Deterministic system owns |
+|---|---|
+| Selecting the next relevant investigation within the recovery objective | Verifying the disruption and snapshotting itinerary state |
+| Interpreting unclear booking and policy conditions | Canonical flight, fare, schedule and provenance facts |
+| Constructing two meaningfully different recovery alternatives | Plan schema, identity, coverage and feasibility checks |
+| Explaining recommendation trade-offs and risk | Capability classification, version binding and authorization |
+| Deciding when insufficient evidence requires escalation | Exact execution, the action ledger and whole-trip revalidation |
+
+### Deep-agent roles and shared state
+
+- **Recovery orchestrator** — plans the investigation, delegates bounded tasks,
+  synthesizes specialist findings and returns a typed `PlanDraft`.
+- **Policy checker** — retrieves rebooking, accommodation, meal, compensation,
+  refund and contact evidence with citations.
+- **Impact analyst** — uses the trip dependency graph to find downstream bookings
+  that are broken or at risk.
+- **Options finder** — searches retrieved inventory and constructs exactly two
+  complete recovery alternatives.
+- **Critic** — independently rechecks grounding, capability classes and option
+  feasibility before compilation.
+
+The specialists have isolated model contexts. They collaborate through a
+recovery workspace containing the redacted itinerary, policy evidence, impact
+analysis and option drafts. The intended production form is a case-scoped,
+versioned `RecoveryCase`; the current prototype uses files under
+`workspace/{analysis,drafts}/`.
 
 The agent has **no tool that can change anything** outside its sandboxed
 workspace. `recovery/subagents.py:check_tool_wiring()` asserts that on every run,
@@ -44,7 +111,7 @@ so the property survives R3 adding an executor.
 |---|---|---|
 | Whether the flight is really disrupted | `recovery/agent.py:verify_disruption` | Runs before any tokens are spent, so "stop if verification is insufficient" is a gate, not an instruction |
 | The list of impacted bookings | `core/impact.py` | The UI, executor and validator must all read the same numbers |
-| Which flights exist | `core/providers.py` | Compiler rule C4 rejects any recommended flight not in the retrieved set |
+| Which flights exist | `core/sources.py` | Compiler rule C4 rejects any recommended flight not in the retrieved set |
 | `itinerary_version` / `plan_version` | `models.py` | A model that computes its own approval hash can invalidate the gate by restating the plan |
 
 ---
@@ -104,7 +171,7 @@ cp .env.example .env          # then add OPENAI_API_KEY
 # One live run of the real agent.
 .venv/bin/python -m eval.smoke_r1 --live
 
-# The UI. Fully interactive with no API key — the demo plan is the tested fixture.
+# Offline fixture UI — useful for deterministic-flow testing, not an agent run.
 .venv/bin/streamlit run streamlit_app.py
 ```
 
@@ -298,24 +365,18 @@ and **nothing for OpenAI**, but OpenAI caches >1024-token prefixes automatically
 If our 2.2k stable prefix is already cached, trimming safety text would pay a real
 price for an imaginary saving.
 
-## Two ways a plan gets built
+## Product planning path
 
-The sidebar picks between them, and the plan screen says which produced the plan
-on screen. **Both go through the same compiler gate**, and everything after the
-plan — approving, executing, validating — is deterministic either way.
+The product architecture has one planning path: the deep-agent orchestrator and
+its four specialists. Only a `PlanDraft` produced through that investigation is
+evidence that the agentic workflow ran.
 
-| | **Deep agent (LLM)** | **Rule-based planner** |
-|---|---|---|
-| What it is | The product. An orchestrating LLM plans its own investigation and delegates to policy-checker, impact-analyst, options-finder and critic. | A deterministic stand-in. Ranks candidates, derives every action time from the dependency graph, retrieves citations lexically. |
-| LLM calls | Yes — the orchestrator sequences the work, options-finder drafts the options | **Zero** |
-| Needs a key | Yes | No |
-| Why it exists | It is the thing being built | So the demo and the offline gates run with no key and no spend |
-
-The planner is the default **only** because OpenAI credits are exhausted and
-Groq's free tier cannot fit the agent (see the TODO). It is a fallback for
-running the demo, not a replacement for the agent — and the UI is explicit about
-which one produced a given plan so a viewer does not conclude there is no model
-in the product at all.
+`core/planner.py` remains an offline fixture and test utility. It is useful for
+exercising the compiler, approval, executor and UI without spending model tokens,
+but it is not a second product architecture and is intentionally excluded from
+the HLD. The current Streamlit fallback to this fixture is a demo limitation; the
+evaluation path should require the deep agent and surface an explicit failure if
+it cannot run rather than silently substituting the fixture.
 
 ## The UI
 
@@ -330,12 +391,11 @@ That is not style: the recovery outlives the page, since a traveller may confirm
 the transfer today and the payment tomorrow from a different tab. Any state the UI
 kept for itself would be a second, staler answer to "where is this trip up to".
 
-It runs with **no API key**. The demo plan is authored by hand in `demo.py` and
-put through the real `compile_plan`, so it is version-bound, its flights are
-canonicalised from the provider fixture, and it has passed C1–C10 exactly as a
-live plan would. `eval/harness.py` re-exports those same fixtures, so **the plan
-the demo shows is the plan the gates test** — the demo cannot drift into showing
-something the compiler would reject.
+For offline development, the UI can render a hand-authored fixture from
+`demo.py`. That fixture goes through the real `compile_plan`, so it remains useful
+for testing the deterministic half of the system, but it does not demonstrate
+the deep-agent planning path. `eval/harness.py` re-exports the same fixture so the
+offline UI and compiler gates cannot drift apart.
 
 Two panels from the mockups are real rather than decorative:
 
@@ -472,7 +532,7 @@ tripRecovery/
 │   ├── policy.py             # corpus parsing + lexical scoring (no paths)
 │   ├── citations.py          # the citation audit
 │   ├── entitlements.py       # six-category entitlement picture + advice
-│   ├── planner.py            # deterministic two-option builder (no model call)
+│   ├── planner.py            # offline fixture/test builder; not a product path
 │   ├── plan_compiler.py      # THE GATE — C1-C4, C7-C10 + canonicalisation
 │   ├── itinerary_ops.py      # apply actions — used by BOTH compiler and executor
 │   ├── approval.py           # approve() / authorize() / Authorization token
